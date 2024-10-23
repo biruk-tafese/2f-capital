@@ -1,10 +1,31 @@
+import 'dart:math';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:todochatapp/features/app/home_page.dart';
+import 'package:todochatapp/features/auth/data/firebase_auth_services.dart';
 import 'package:todochatapp/features/auth/presentation/signup_page.dart';
 import 'package:todochatapp/features/common/widgets/form_container_widget.dart';
+import 'package:todochatapp/features/global/common/toast.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final FirebaseAuthServices _auth = FirebaseAuthServices();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isSigingin = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,24 +54,20 @@ class LoginPage extends StatelessWidget {
                 const SizedBox(
                   height: 30,
                 ),
-                const FormContainerWidget(
+                FormContainerWidget(
+                  controller: _emailController,
                   hintText: 'Email',
                   isPasswordField: false,
                 ),
                 const SizedBox(height: 30),
-                const FormContainerWidget(
+                FormContainerWidget(
+                  controller: _passwordController,
                   hintText: 'Password',
                   isPasswordField: true,
                 ),
                 const SizedBox(height: 30),
                 GestureDetector(
-                  onTap: () => {
-                    Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                            builder: (conext) => const HomePage()),
-                        (route) => false)
-                  },
+                  onTap: _login,
                   child: Container(
                     width: double.infinity,
                     height: 45,
@@ -58,12 +75,17 @@ class LoginPage extends StatelessWidget {
                       color: Colors.blue,
                       borderRadius: BorderRadiusDirectional.circular(10),
                     ),
-                    child: const Center(
-                      child: Text(
-                        "Login",
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
+                    child: Center(
+                      child: _isSigingin
+                          ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                          : const Text(
+                              "Login",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
                     ),
                   ),
                 ),
@@ -101,5 +123,29 @@ class LoginPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _login() async {
+    setState(() {
+      _isSigingin = true;
+    });
+
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+    User? user = await _auth.signInWithEmailAndPassword(email, password);
+
+    setState(() {
+      _isSigingin = false;
+    });
+    if (user != null) {
+      showToast(message: "user is Loged in");
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+          (route) => false);
+    } else {
+      showToast(message: "user is not Loged in");
+    }
   }
 }

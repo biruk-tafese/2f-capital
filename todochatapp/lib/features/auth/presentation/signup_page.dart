@@ -4,6 +4,7 @@ import 'package:todochatapp/features/app/home_page.dart';
 import 'package:todochatapp/features/auth/data/firebase_auth_services.dart';
 import 'package:todochatapp/features/auth/presentation/login_page.dart';
 import 'package:todochatapp/features/common/widgets/form_container_widget.dart';
+import 'package:todochatapp/features/global/common/toast.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -19,6 +20,8 @@ class _SignupPageState extends State<SignupPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _usernameController = TextEditingController();
+
+  bool isSigningUp = false;
 
   // Simple email validation regex
   final RegExp _emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
@@ -133,12 +136,17 @@ class _SignupPageState extends State<SignupPage> {
                       color: Colors.blue,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Center(
-                      child: Text(
-                        "Signup",
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
+                    child: Center(
+                      child: isSigningUp
+                          ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                          : const Text(
+                              "Signup",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
                     ),
                   ),
                 ),
@@ -175,20 +183,28 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   void _signUp() async {
+    setState(() {
+      isSigningUp = true;
+    });
+
     String email = _emailController.text;
     String password = _passwordController.text;
     String username = _usernameController.text;
 
     User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
+    setState(() {
+      isSigningUp = false;
+    });
+
     if (user != null) {
-      print("user is created");
+      showToast(message: "user is created");
       Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
           (route) => false);
     } else {
-      print("user is not created");
+      showToast(message: "user is not created");
     }
   }
 }
