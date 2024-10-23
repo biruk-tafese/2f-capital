@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "829710817758",
+    "project_id": "f-chat-todo-app",
+    "storage_bucket": "f-chat-todo-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:829710817758:android:e1dfd9b36f163c123ea54f",
+        "android_client_info": {
+          "package_name": "com.example.todochatapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9aAB3PlW0WhkHuNkkrdPZZgc6FgW1NYM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
