@@ -1,43 +1,50 @@
 plugins {
-    id "com.android.application"
-    // START: FlutterFire Configuration
-    id 'com.google.gms.google-services'
-    // END: FlutterFire Configuration
-    id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id "dev.flutter.flutter-gradle-plugin"
+    id 'com.android.application'
+    id 'kotlin-android'
+    // FlutterFire Configuration
+    id 'com.google.gms.google-services' // For Firebase
+    id 'dev.flutter.flutter-gradle-plugin' // Flutter plugin
 }
 
 android {
-    namespace = "com.example.todochatapp"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    namespace "com.example.todochatapp"
+
+    // Compile SDK version to use APIs from Android 13 (API level 33) or the latest available
+    compileSdkVersion 34  // Or the latest available (you mentioned 35)
+
+    // Optional: NDK version (if applicable)
+    ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = "1.8"
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.todochatapp"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        // Unique application ID
+        applicationId "com.example.todochatapp"
+        
+        // Minimum supported Android version
+        minSdkVersion 23  // Set to 23 to match Firebase's requirements
+
+        // Target Android version
+        targetSdkVersion 33  // Target the latest stable version
+
+        // Version code and name for your app
+        versionCode 1
+        versionName "1.0"
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            // Configure release build
+            signingConfig signingConfigs.debug
+            // For production, configure a proper signing config for release builds
+            // signingConfig signingConfigs.release
         }
     }
 }
@@ -45,3 +52,6 @@ android {
 flutter {
     source = "../.."
 }
+
+// Apply the Google services plugin for Firebase configuration
+apply plugin: 'com.google.gms.google-services'
