@@ -50,4 +50,10 @@ List<Map<String, dynamic>> todos = [
     'description': '',
     'color': Colors.orange,
   },
+  {
+    'type': 'image',
+    'title': 'Surprise party for Rocky!',
+    'imageUrl': 'https://unsplash.com/photos/OOE4xAnBhKo/download?force=true',
+    'color': Colors.orange,
+  },
 ];

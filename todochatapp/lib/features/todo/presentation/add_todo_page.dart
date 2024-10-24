@@ -86,7 +86,7 @@ class _AddTodoPageState extends State<AddTodoPage> {
                     ),
                   ],
                 );
-              }).toList(),
+              }),
             ],
             const Spacer(),
             ElevatedButton(
