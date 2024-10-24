@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:todochatapp/features/auth/presentation/login_page.dart';
+import 'package:todochatapp/features/global/common/toast.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage> {
                       MaterialPageRoute(
                           builder: (context) => const LoginPage()),
                       (route) => false);
+                  showToast(message: "SignOut Successfully");
                 },
                 child: const Text('SignOut'),
               ),
