@@ -1,0 +1,58 @@
+List<Map<String, dynamic>> chatData = [
+  {
+    'name': 'Alicia Torreaux',
+    'message': 'Bob says hi.',
+    'time': '15:02',
+    'imageUrl': 'https://unsplash.com/photos/vVB9nqk-ggI/download?force=true',
+    'unread': 2,
+  },
+  {
+    'name': 'Roberto',
+    'message': 'Say hello to Alice 👋',
+    'time': '14:59',
+    'imageUrl': 'https://unsplash.com/photos/6VPEOdpFNAs/download?force=true',
+    'unread': 1,
+  },
+  {
+    'name': 'Graduation Party',
+    'message': 'Dan: Almost 3000 members!',
+    'time': '14:42',
+    'imageUrl': 'https://unsplash.com/photos/XWkyHfZt5Y0/download?force=true',
+    'unread': 0,
+  },
+  {
+    'name': 'Karen Stanford',
+    'message': 'Table for four, 2 PM. Be there.',
+    'time': '14:40',
+    'imageUrl': 'https://unsplash.com/photos/OOE4xAnBhKo/download?force=true',
+    'unread': 0,
+  },
+  {
+    'name': 'Cat Videos',
+    'message': 'Video',
+    'time': '13:15',
+    'imageUrl': 'https://unsplash.com/photos/JuH4pAn89Hw/download?force=true',
+    'unread': 0,
+  },
+  {
+    'name': 'Little Sister',
+    'message': 'I got a job at NASA! 🎉🚀',
+    'time': '12:45',
+    'imageUrl': 'https://unsplash.com/photos/rDEOVtE7vOs/download?force=true',
+    'unread': 0,
+  },
+  {
+    'name': 'Monika Parker',
+    'message': 'I don’t remember anything 😁',
+    'time': '10:00',
+    'imageUrl': 'https://unsplash.com/photos/HLXW6X4CsbE/download?force=true',
+    'unread': 1,
+  },
+  {
+    'name': 'Wave Hunters',
+    'message': 'Check out these waves!',
+    'time': '09:45',
+    'imageUrl': 'https://unsplash.com/photos/SYx3UCHZJlo/download?force=true',
+    'unread': 0,
+  },
+];
