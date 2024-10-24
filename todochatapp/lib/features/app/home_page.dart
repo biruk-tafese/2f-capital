@@ -11,6 +11,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int currentIndex = 0;
+  final screen = [
+    const Center(
+        child: Text(
+      'Home',
+      style: TextStyle(fontSize: 24),
+    )),
+    const Center(
+        child: Text(
+      'Inbox',
+      style: TextStyle(fontSize: 24),
+    )),
+    const Center(
+        child: Text(
+      'Notification',
+      style: TextStyle(fontSize: 24),
+    )),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,6 +59,27 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.messenger),
+            label: 'Inbox',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_active),
+            label: 'Notification',
+          ),
+        ],
+        currentIndex: currentIndex,
+        selectedItemColor: Colors.amber[800],
+        onTap: (index) => setState(() => currentIndex = (index)),
+      ),
+
+      //body section
     );
   }
 }
