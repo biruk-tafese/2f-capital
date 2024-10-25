@@ -15,8 +15,7 @@ class TodoCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
-          mainAxisSize:
-              MainAxisSize.min, // Allows the card to resize based on content
+          mainAxisSize: MainAxisSize.min, // Allows card to adapt to content
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
@@ -30,39 +29,44 @@ class TodoCard extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             if (todo['type'] == 'note')
-              Flexible(
-                child: Text(
-                  todo['description'],
-                  style: const TextStyle(color: Colors.white),
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Text(
+                todo['description'],
+                style: const TextStyle(color: Colors.white),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               )
             else if (todo['type'] == 'checklist')
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final item in todo['items'])
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: item['done'],
-                            onChanged: (bool? value) {},
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxHeight: 100, // Limit height to avoid overflow
+                ),
+                child: ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: todo['items'].length,
+                  itemBuilder: (context, index) {
+                    final item = todo['items'][index];
+                    return Row(
+                      children: [
+                        Checkbox(
+                          value: item['done'],
+                          onChanged: (bool? value) {},
+                        ),
+                        Expanded(
+                          child: Text(
+                            item['name'],
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: Colors.white),
                           ),
-                          Flexible(
-                            // Ensures each item fits within available space
-                            child: Text(
-                              item['name'],
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
+                        ),
+                      ],
+                    );
+                  },
                 ),
               )
             else if (todo['type'] == 'image')
-              Flexible(
+              AspectRatio(
+                aspectRatio: 1.5,
                 child: Image.network(
                   todo['imageUrl'],
                   fit: BoxFit.cover,

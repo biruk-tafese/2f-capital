@@ -65,7 +65,7 @@ final List<Map<String, dynamic>> todos = [
     'color': Colors.yellow.shade200,
     'pinned': false,
     'category': 'Miscellaneous',
-    'imageUrl': 'https://unsplash.com/photos/XWkyHfZt5Y0/download?force=true',
+    'imageUrl': 'https://picsum.photos/500/300',
   },
   {
     'id': '7',
@@ -96,6 +96,6 @@ final List<Map<String, dynamic>> todos = [
     'color': Colors.pink.shade200,
     'pinned': true,
     'category': 'Travel',
-    'imageUrl': 'https://unsplash.com/photos/HLXW6X4CsbE/download?force=true',
+    'imageUrl': 'https://picsum.photos/200/300',
   },
 ];
