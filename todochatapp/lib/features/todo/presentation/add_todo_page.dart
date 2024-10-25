@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class AddTodoPage extends StatefulWidget {
   const AddTodoPage({super.key});
@@ -8,10 +10,15 @@ class AddTodoPage extends StatefulWidget {
 }
 
 class _AddTodoPageState extends State<AddTodoPage> {
-  String todoType = 'note'; // Default to 'note'
+  String todoType = 'note';
+  String category = 'Personal';
+  bool isPinned = false;
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
   List<Map<String, dynamic>> checklistItems = [];
+  File? imageFile; // File to store the selected image
+
+  final ImagePicker _picker = ImagePicker(); // Image picker instance
 
   @override
   Widget build(BuildContext context) {
@@ -20,85 +27,178 @@ class _AddTodoPageState extends State<AddTodoPage> {
         title: const Text("Add Todo"),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-              ),
-            ),
-            const SizedBox(height: 10),
-            if (todoType == 'note' || todoType == 'checklist') ...[
+        padding: const EdgeInsets.all(12.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
+                controller: titleController,
+                decoration: InputDecoration(
+                  labelText: 'Title',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-            ],
-            DropdownButton<String>(
-              value: todoType,
-              onChanged: (String? newValue) {
-                setState(() {
-                  todoType = newValue!;
-                });
-              },
-              items: <String>['note', 'image', 'checklist']
-                  .map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 20),
-            if (todoType == 'checklist') ...[
-              ElevatedButton(
-                onPressed: () {
-                  _addChecklistItem();
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: category,
+                decoration: InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    category = newValue!;
+                  });
                 },
-                child: const Text("Add Checklist Item"),
+                items: [
+                  'Personal',
+                  'Work',
+                  'Shopping',
+                  'Cooking',
+                  'Travel',
+                  'Miscellaneous'
+                ].map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
               ),
-              const SizedBox(height: 10),
-              ...checklistItems.map((item) {
-                return Row(
-                  children: [
-                    Checkbox(
-                      value: item['done'],
-                      onChanged: (bool? value) {
-                        setState(() {
-                          item['done'] = value!;
-                        });
-                      },
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Pin this Todo"),
+                  Switch(
+                    value: isPinned,
+                    onChanged: (bool newValue) {
+                      setState(() {
+                        isPinned = newValue;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: todoType,
+                decoration: InputDecoration(
+                  labelText: 'Todo Type',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                ),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    todoType = newValue!;
+                    imageFile = null; // Clear the image when switching types
+                  });
+                },
+                items: ['note', 'image', 'checklist']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              if (todoType == 'note') ...[
+                TextField(
+                  controller: descriptionController,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
                     ),
-                    Expanded(
-                      child: TextField(
-                        onChanged: (newValue) {
-                          item['name'] = newValue;
-                        },
-                        decoration: const InputDecoration(
-                          hintText: 'Checklist item',
-                        ),
+                  ),
+                  maxLines: 3,
+                ),
+              ] else if (todoType == 'image') ...[
+                const SizedBox(height: 16),
+                imageFile != null
+                    ? Image.file(
+                        imageFile!,
+                        height: 200,
+                      )
+                    : ElevatedButton.icon(
+                        onPressed: _pickImage,
+                        icon: const Icon(Icons.image),
+                        label: const Text("Upload Image"),
                       ),
+              ] else if (todoType == 'checklist') ...[
+                ElevatedButton(
+                  onPressed: _addChecklistItem,
+                  child: const Text("Add Checklist Item"),
+                ),
+                const SizedBox(height: 10),
+                ...checklistItems.map((item) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: item['done'],
+                          onChanged: (bool? value) {
+                            setState(() {
+                              item['done'] = value!;
+                            });
+                          },
+                        ),
+                        Expanded(
+                          child: TextField(
+                            onChanged: (newValue) {
+                              item['name'] = newValue;
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Checklist item',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                );
-              }),
+                  );
+                }),
+              ],
+              const SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _saveTodo,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 14.0, horizontal: 20.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                  ),
+                  child: const Text(
+                    "Save Todo",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
             ],
-            const Spacer(),
-            ElevatedButton(
-              onPressed: () {
-                _saveTodo();
-              },
-              child: const Text("Save Todo"),
-            ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        imageFile = File(pickedFile.path);
+      });
+    }
   }
 
   void _addChecklistItem() {
@@ -108,18 +208,19 @@ class _AddTodoPageState extends State<AddTodoPage> {
   }
 
   void _saveTodo() {
-    // Here, you can process and save the todo
-    // You can pass the collected data to your backend or local storage
-    // For simplicity, this code just prints the data
+    final newTodo = {
+      'title': titleController.text,
+      'description': todoType == 'note' ? descriptionController.text : null,
+      'type': todoType,
+      'category': category,
+      'pinned': isPinned,
+      'color': Colors.blue.shade200,
+      'items': todoType == 'checklist' ? checklistItems : null,
+      'imageFile':
+          todoType == 'image' ? imageFile : null, // Store File if image type
+    };
 
-    if (todoType == 'checklist') {
-      print('Checklist Todo: ${titleController.text}');
-      print('Items: $checklistItems');
-    } else {
-      print('Todo Title: ${titleController.text}');
-      print('Todo Description: ${descriptionController.text}');
-    }
-
-    Navigator.pop(context); // Go back to the todos page
+    print('New Todo: $newTodo');
+    Navigator.pop(context);
   }
 }

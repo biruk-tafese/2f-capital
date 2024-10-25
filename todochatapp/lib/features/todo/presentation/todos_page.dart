@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:todochatapp/features/todo/data/todos_data.dart';
+import 'package:todochatapp/features/todo/presentation/add_todo_page.dart';
 import 'package:todochatapp/features/todo/presentation/todo_card.dart';
+import 'package:todochatapp/features/todo/presentation/todos_detail_page.dart';
 
 class TodosPage extends StatelessWidget {
   const TodosPage({super.key});
@@ -16,7 +18,9 @@ class TodosPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              // Add new todo action
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return AddTodoPage();
+              }));
             },
           ),
         ],
@@ -43,16 +47,28 @@ class TodosPage extends StatelessWidget {
               ),
               GridView.builder(
                 physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true, // Ensures grid takes only needed space
+                shrinkWrap: true,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 10.0,
                   mainAxisSpacing: 10.0,
-                  childAspectRatio: 1, // Adjust as needed
+                  childAspectRatio: 1,
                 ),
                 itemCount: categoryTodos.length,
                 itemBuilder: (context, gridIndex) {
-                  return TodoCard(todo: categoryTodos[gridIndex]);
+                  return GestureDetector(
+                    // Wrap TodoCard in GestureDetector
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              TodoDetailPage(todo: categoryTodos[gridIndex]),
+                        ),
+                      );
+                    },
+                    child: TodoCard(todo: categoryTodos[gridIndex]),
+                  );
                 },
               ),
             ],
