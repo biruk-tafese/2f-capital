@@ -8,47 +8,33 @@ class TodoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: todo['color'], // Custom color for each todo
+      color: todo['color'],
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10.0),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(8.0),
         child: Column(
+          mainAxisSize:
+              MainAxisSize.min, // Allows the card to resize based on content
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min, // Makes the card's height flexible
           children: [
             Text(
               todo['title'],
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
-              overflow: TextOverflow.ellipsis, // Prevents overflow
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 5),
             if (todo['type'] == 'note')
-              Text(
-                todo['description'],
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                maxLines: 3, // Limits lines to avoid overflow
-                overflow: TextOverflow.ellipsis,
-              )
-            else if (todo['type'] == 'image')
               Flexible(
-                child: Column(
-                  children: [
-                    Text(todo['title']),
-                    const SizedBox(height: 5),
-                    Image.network(
-                      todo['imageUrl'],
-                      fit: BoxFit.cover,
-                    ),
-                  ],
+                child: Text(
+                  todo['description'],
+                  style: const TextStyle(color: Colors.white),
+                  overflow: TextOverflow.ellipsis,
                 ),
               )
             else if (todo['type'] == 'checklist')
@@ -56,37 +42,36 @@ class TodoCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 5),
-                    Expanded(
-                      // Use ListView to make the list of items scrollable if needed
-                      child: ListView.builder(
-                        itemCount: todo['items'].length,
-                        itemBuilder: (context, index) {
-                          final item = todo['items'][index];
-                          return Row(
-                            children: [
-                              Flexible(
-                                child: Checkbox(
-                                  value: item['done'],
-                                  onChanged: (bool? value) {
-                                    // Update the item's status
-                                    item['done'] = value!;
-                                  },
-                                ),
-                              ),
-                              Flexible(
-                                child: Text(
-                                  item['name'],
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                    for (final item in todo['items'])
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: item['done'],
+                            onChanged: (bool? value) {},
+                          ),
+                          Flexible(
+                            // Ensures each item fits within available space
+                            child: Text(
+                              item['name'],
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
                   ],
                 ),
               )
+            else if (todo['type'] == 'image')
+              Flexible(
+                child: Image.network(
+                  todo['imageUrl'],
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.broken_image,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
