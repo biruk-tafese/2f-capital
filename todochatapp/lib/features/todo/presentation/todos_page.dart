@@ -1,91 +1,101 @@
 import 'package:flutter/material.dart';
-import 'package:todochatapp/features/todo/data/todos_data.dart';
+import 'package:todochatapp/features/todo/data/firebase_db.dart';
+import 'package:todochatapp/features/todo/model/todo_model.dart';
 import 'package:todochatapp/features/todo/presentation/add_todo_page.dart';
 import 'package:todochatapp/features/todo/presentation/todo_card.dart';
-import 'package:todochatapp/features/todo/presentation/todos_detail_page.dart';
 
-class TodosPage extends StatelessWidget {
-  const TodosPage({super.key});
+class TodosPage extends StatefulWidget {
+  @override
+  _TodosPageState createState() => _TodosPageState();
+}
+
+class _TodosPageState extends State<TodosPage> {
+  bool isGridView = true; // Toggle for view
+  List<Map<String, dynamic>> todos = [];
+  final Stream<List<TodoModel>> collectionReference = FirebaseDB.readTodo();
+  bool isLoading = true; // Loading state
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTodos();
+  }
+
+  void fetchTodos() {
+    collectionReference.listen((event) {
+      // Assuming event is a List<TodoModel> from Firebase
+      setState(() {
+        todos = event.map((todo) {
+          return {
+            'title': todo.title,
+            'description': todo.description,
+            'color': todo.color.value, // Convert color to integer
+            'isPinned': todo.isPinned ?? false,
+          };
+        }).toList();
+
+        // Sort pinned todos to the top
+        todos.sort((a, b) => b['isPinned'] ? 1 : 0);
+        isLoading = false; // Stop loading once data is fetched
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final categories = _groupTodosByCategory();
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Todo Overview"),
+        title: Text("Todos"),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return AddTodoPage();
-              }));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddTodoPage()),
+              );
+            },
+            icon: Icon(Icons.add), // Add button
+          ),
+          IconButton(
+            icon: Icon(isGridView ? Icons.list : Icons.grid_view),
+            onPressed: () {
+              setState(() {
+                isGridView = !isGridView; // Toggle view
+              });
             },
           ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(8.0),
-        itemCount: categories.keys.length,
-        itemBuilder: (context, index) {
-          final category = categories.keys.elementAt(index);
-          final categoryTodos = categories[category]!;
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                  category,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              GridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10.0,
-                  mainAxisSpacing: 10.0,
-                  childAspectRatio: 1,
-                ),
-                itemCount: categoryTodos.length,
-                itemBuilder: (context, gridIndex) {
-                  return GestureDetector(
-                    // Wrap TodoCard in GestureDetector
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              TodoDetailPage(todo: categoryTodos[gridIndex]),
-                        ),
-                      );
-                    },
-                    child: TodoCard(todo: categoryTodos[gridIndex]),
-                  );
-                },
-              ),
-            ],
-          );
-        },
-      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator()) // Loading indicator
+          : todos.isEmpty
+              ? Center(child: Text("No todos available")) // No todos message
+              : isGridView
+                  ? buildGridView()
+                  : buildListView(),
     );
   }
 
-  Map<String, List<Map<String, dynamic>>> _groupTodosByCategory() {
-    final Map<String, List<Map<String, dynamic>>> categories = {};
-    for (var todo in todos) {
-      if (!categories.containsKey(todo['category'])) {
-        categories[todo['category']] = [];
-      }
-      categories[todo['category']]!.add(todo);
-    }
-    return categories;
+  Widget buildGridView() {
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: todos.length,
+      itemBuilder: (context, index) {
+        return TodoCard(todo: todos[index]);
+      },
+    );
+  }
+
+  Widget buildListView() {
+    return ListView.builder(
+      itemCount: todos.length,
+      itemBuilder: (context, index) {
+        return TodoCard(todo: todos[index]);
+      },
+    );
   }
 }

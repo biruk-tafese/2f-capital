@@ -1,6 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:todochatapp/features/todo/data/firebase_db.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class AddTodoPage extends StatefulWidget {
   const AddTodoPage({super.key});
@@ -10,180 +11,75 @@ class AddTodoPage extends StatefulWidget {
 }
 
 class _AddTodoPageState extends State<AddTodoPage> {
-  String todoType = 'note';
-  String category = 'Personal';
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _imageUrlController = TextEditingController();
+  final _categoryController = TextEditingController();
+  final _typeController = TextEditingController();
+  Color selectedColor = Colors.white; // Default color
   bool isPinned = false;
-  TextEditingController titleController = TextEditingController();
-  TextEditingController descriptionController = TextEditingController();
-  List<Map<String, dynamic>> checklistItems = [];
-  File? imageFile; // File to store the selected image
 
-  final ImagePicker _picker = ImagePicker(); // Image picker instance
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  List<Map<String, dynamic>> checklistItems = [];
+  String todoType = 'note'; // Default todo type
+  String category = 'General'; // Default category
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Todo"),
+        title: Text('Add Todo'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextField(
-                controller: titleController,
-                decoration: InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: category,
-                decoration: InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    category = newValue!;
-                  });
+              TextFormField(
+                controller: _titleController,
+                decoration: InputDecoration(labelText: 'Title'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Title cannot be empty';
+                  }
+                  return null;
                 },
-                items: [
-                  'Personal',
-                  'Work',
-                  'Shopping',
-                  'Cooking',
-                  'Travel',
-                  'Miscellaneous'
-                ].map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
               ),
-              const SizedBox(height: 16),
+              if (todoType == 'note') // Show description only for notes
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(labelText: 'Description'),
+                ),
+              // Color picker for the todo
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text("Pin this Todo"),
+                  Text('Select Color:'),
+                  IconButton(
+                    icon: Icon(Icons.color_lens),
+                    onPressed: _pickColor,
+                  ),
+                ],
+              ),
+              // Example toggle for pinned status
+              Row(
+                children: [
+                  Text('Pin Todo'),
                   Switch(
                     value: isPinned,
-                    onChanged: (bool newValue) {
+                    onChanged: (value) {
                       setState(() {
-                        isPinned = newValue;
+                        isPinned = value;
                       });
                     },
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: todoType,
-                decoration: InputDecoration(
-                  labelText: 'Todo Type',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-                ),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    todoType = newValue!;
-                    imageFile = null; // Clear the image when switching types
-                  });
-                },
-                items: ['note', 'image', 'checklist']
-                    .map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
-              if (todoType == 'note') ...[
-                TextField(
-                  controller: descriptionController,
-                  decoration: InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                  maxLines: 3,
-                ),
-              ] else if (todoType == 'image') ...[
-                const SizedBox(height: 16),
-                imageFile != null
-                    ? Image.file(
-                        imageFile!,
-                        height: 200,
-                      )
-                    : ElevatedButton.icon(
-                        onPressed: _pickImage,
-                        icon: const Icon(Icons.image),
-                        label: const Text("Upload Image"),
-                      ),
-              ] else if (todoType == 'checklist') ...[
-                ElevatedButton(
-                  onPressed: _addChecklistItem,
-                  child: const Text("Add Checklist Item"),
-                ),
-                const SizedBox(height: 10),
-                ...checklistItems.map((item) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: item['done'],
-                          onChanged: (bool? value) {
-                            setState(() {
-                              item['done'] = value!;
-                            });
-                          },
-                        ),
-                        Expanded(
-                          child: TextField(
-                            onChanged: (newValue) {
-                              item['name'] = newValue;
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'Checklist item',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ],
-              const SizedBox(height: 20),
-              Center(
-                child: ElevatedButton(
-                  onPressed: _saveTodo,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 14.0, horizontal: 20.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                  child: const Text(
-                    "Save Todo",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
+              // Button to save the todo
+              ElevatedButton(
+                onPressed: _saveTodo,
+                child: Text('Save Todo'),
               ),
             ],
           ),
@@ -192,35 +88,86 @@ class _AddTodoPageState extends State<AddTodoPage> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+  Future<void> _pickColor() async {
+    Color? color = await showDialog<Color>(
+      context: context,
+      builder: (context) {
+        Color tempColor = Colors.white; // Default color
+        return AlertDialog(
+          title: Text('Select a color'),
+          content: SingleChildScrollView(
+            child: BlockPicker(
+              pickerColor: tempColor,
+              onColorChanged: (color) {
+                tempColor = color;
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: Text('Select'),
+              onPressed: () {
+                Navigator.of(context).pop(tempColor);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (color != null) {
       setState(() {
-        imageFile = File(pickedFile.path);
+        selectedColor = color;
       });
     }
   }
 
-  void _addChecklistItem() {
-    setState(() {
-      checklistItems.add({'name': '', 'done': false});
-    });
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Error'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  void _saveTodo() {
-    final newTodo = {
-      'title': titleController.text,
-      'description': todoType == 'note' ? descriptionController.text : null,
-      'type': todoType,
-      'category': category,
-      'pinned': isPinned,
-      'color': Colors.blue.shade200,
-      'items': todoType == 'checklist' ? checklistItems : null,
-      'imageFile':
-          todoType == 'image' ? imageFile : null, // Store File if image type
-    };
+  void _saveTodo() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      // Check if the user is authenticated
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        _showErrorDialog('You must be logged in to save todos');
+        return;
+      }
 
-    print('New Todo: $newTodo');
-    Navigator.pop(context);
+      // Prepare todo data
+      var response = await FirebaseDB.addTodo(
+        id: user.uid,
+        title: _titleController.text,
+        description: _descriptionController.text,
+        type: _typeController.text.isEmpty ? todoType : _typeController.text,
+        color: selectedColor,
+        isPinned: isPinned,
+        category: _categoryController.text.isEmpty
+            ? category
+            : _categoryController.text,
+        items: checklistItems.map((item) => {'item': item}).toList(),
+        imageUrl: _imageUrlController.text,
+      );
+
+      // Show result message
+      _showErrorDialog(response.message.toString());
+    }
   }
 }

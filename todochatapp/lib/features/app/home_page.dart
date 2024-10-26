@@ -15,18 +15,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int currentIndex = 0;
   final screen = [
-    // const Center(
-    //     child: Text(
-    //   "Todo's",
-    //   style: TextStyle(fontSize: 24),
-    // )),
-    const TodosPage(),
+    TodosPage(),
     ChatPage(),
-    // const Center(
-    //     child: Text(
-    //   'Chat',
-    //   style: TextStyle(fontSize: 24),
-    // )),
   ];
 
   @override
@@ -37,13 +27,19 @@ class _HomePageState extends State<HomePage> {
         actions: [
           const Icon(Icons.person),
           IconButton(
-            onPressed: () {
-              FirebaseAuth.instance.signOut();
-              Navigator.pushAndRemoveUntil(
+            onPressed: () async {
+              try {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginPage()),
-                  (route) => false);
-              showToast(message: "SignOut Successfully");
+                  (route) => false,
+                );
+                showToast(message: "Signed out successfully");
+              } catch (error) {
+                // Handle error
+                showToast(message: "Error signing out: $error");
+              }
             },
             icon: const Icon(Icons.logout),
           ),
@@ -69,10 +65,8 @@ class _HomePageState extends State<HomePage> {
         ],
         currentIndex: currentIndex,
         selectedItemColor: Colors.amber[800],
-        onTap: (index) => setState(() => currentIndex = (index)),
+        onTap: (index) => setState(() => currentIndex = index),
       ),
-
-      //body section
     );
   }
 }

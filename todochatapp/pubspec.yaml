@@ -43,6 +43,8 @@ dependencies:
   google_sign_in: ^6.2.1
   font_awesome_flutter: ^10.7.0
   image_picker: ^1.1.2
+  firebase_database: ^11.1.4
+  flutter_colorpicker: ^1.1.0
 
 dev_dependencies:
   flutter_test:
