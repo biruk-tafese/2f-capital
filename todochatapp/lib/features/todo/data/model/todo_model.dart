@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class TodoModel {
   String id;
   String title;
-  String? description;
+  String description;
   String type;
   Color color;
   bool isPinned;
@@ -12,14 +12,14 @@ class TodoModel {
   String? imageUrl;
   String createdBy;
   List<String>? assignedUsers;
-  int? lastEdited;
+  DateTime? lastEdited;
   String? editingUser;
 
   // Constructor
   TodoModel({
     required this.id,
     required this.title,
-    this.description,
+    required this.description,
     required this.type,
     required this.color,
     this.isPinned = false,
@@ -70,7 +70,7 @@ class TodoModel {
       'imageUrl': imageUrl,
       'createdBy': createdBy,
       'assignedUsers': assignedUsers,
-      'lastEdited': lastEdited,
+      'lastEdited': lastEdited?.toIso8601String(),
       'editingUser': editingUser,
     };
   }

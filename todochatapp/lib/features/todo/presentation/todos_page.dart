@@ -12,6 +12,7 @@ class TodosPage extends StatefulWidget {
 
 class _TodoListScreenState extends State<TodosPage> {
   bool isGridView = false; // Toggle to switch views
+  FirebaseDB firebaseDB = FirebaseDB();
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +38,7 @@ class _TodoListScreenState extends State<TodosPage> {
         ],
       ),
       body: StreamBuilder<List<TodoModel>>(
-        stream: FirebaseDB.readTodo(),
+        stream: firebaseDB.readTodo(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -76,17 +77,39 @@ class _TodoListScreenState extends State<TodosPage> {
 class TodoItemCard extends StatelessWidget {
   final TodoModel todo;
 
-  TodoItemCard({required this.todo});
+  const TodoItemCard({super.key, required this.todo});
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: todo.color,
-      child: ListTile(
-        title: Text(todo.title),
-        subtitle: Text(todo.description ?? ""),
-        trailing:
-            todo.isPinned ? Icon(Icons.push_pin, color: Colors.red) : null,
+      color: Color(todo.color.value), // Fallback to white if color is null
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              todo.title ?? "No Title", // Fallback if title is null
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 4),
+            Text(todo.description ?? "No Description"),
+            if (todo.type != null) // Show type if not null
+              Text("Type: ${todo.type}"),
+            if (todo.category != null) // Show category if not null
+              Text("Category: ${todo.category}"),
+            if (todo.lastEdited != null) // Show last edited user if not null
+              Text("Last edited by: ${todo.lastEdited}"),
+            if (todo.lastEdited !=
+                null) // Show last edited timestamp if not null
+              Text("Last edited at: ${todo.lastEdited}"),
+            SizedBox(height: 4),
+            if (todo.imageUrl != null) // Show image if URL is not null
+              Image.network(todo.imageUrl!, height: 50, fit: BoxFit.cover),
+            if (todo.isPinned) // Show pin icon if pinned
+              Icon(Icons.push_pin, color: Colors.red),
+          ],
+        ),
       ),
     );
   }

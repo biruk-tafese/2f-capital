@@ -1,65 +1,138 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart'; // Import for Color class
+import 'package:todochatapp/features/todo/data/model/response.dart';
 import 'package:todochatapp/features/todo/data/model/todo_model.dart';
 
+final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+final CollectionReference _collection = _firestore.collection('Todos');
+
 class FirebaseDB {
-  final DatabaseReference _db = FirebaseDatabase.instance.ref();
+  static Future<Response> addTodo({
+    required String id, // Marked as required
+    required String title, // Marked as required
+    String? description, // Optional description of the todo
+    required String type, // Marked as required
+    required Color color, // Marked as required
+    required bool isPinned, // Marked as required
+    required String category, // Marked as required
+    List<Map<String, dynamic>>? items, // Optional list of checklist items
+    String? imageUrl, // Optional image URL
+  }) async {
+    Response response = Response();
+    final DatabaseReference _dbRef =
+        FirebaseDatabase.instance.ref('todos'); // Reference to the 'todos' node
 
-  // Fetch Todos in real-time and listen to changes
-  Stream<List<TodoModel>> getTodosStream() {
-    final todosRef = _db.child('todos');
+    final DatabaseReference newTodoRef =
+        _dbRef.child(id); // Create a new child reference for the todo
 
-    return todosRef.onValue.map((event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>?;
-      if (data != null) {
-        return data.entries.map((entry) {
-          final todoData = Map<String, dynamic>.from(entry.value);
-          return TodoModel.fromMap(todoData);
-        }).toList();
+    // Constructing the data to save in Realtime Database
+    Map<String, dynamic> data = <String, dynamic>{
+      "id": id,
+      "title": title,
+      "description": description,
+      "type": type,
+      "color": color.value, // Store color as an integer value
+      "pinned": isPinned,
+      "category": category,
+      "items": items ?? [], // Default to empty list if null
+      "imageUrl": imageUrl,
+    };
+
+    try {
+      await newTodoRef.set(data); // Use set to store the data
+      response.code = 200;
+      response.message = "Successfully added to the database";
+    } catch (e) {
+      response.code = 500;
+      response.message =
+          e.toString(); // Convert error to string for easier debugging
+    }
+
+    return response;
+  }
+
+  Stream<List<TodoModel>> readTodo() {
+    final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+
+    return _dbRef.onValue.map((event) {
+      final List<TodoModel> todos = [];
+
+      if (event.snapshot.value != null) {
+        final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+        data.forEach((key, value) {
+          final todoData = Map<String, dynamic>.from(value);
+          todos.add(TodoModel(
+            id: key, // Use the key as the ID
+            title: todoData['title'] ?? '',
+            description: todoData['description'] ?? '',
+            type: todoData['type'] ?? '',
+            color: Color(todoData['color'] ?? 0xFFFFFFFF), // Default to white
+            isPinned: todoData['pinned'] ?? false,
+            category: todoData['category'] ?? '',
+            items: List<Map<String, dynamic>>.from(todoData['items'] ?? []),
+            imageUrl: todoData['imageUrl'] ?? '',
+            createdBy: todoData['createdBy'] ?? '',
+          ));
+        });
       }
-      return [];
+      return todos;
     });
   }
 
-  // Add a new Todo
-  Future<void> addTodo(TodoModel todo) async {
-    final newTodoRef = _db.child('todos').push();
-    await newTodoRef.set(todo.toMap());
-  }
+  Future<Response> updateTodo({
+    required String id, // Unique identifier for the todo item
+    required String title, // Title of the todo
+    String? description, // Optional description of the todo
+    required String type, // Type of todo (e.g., note, checklist, image)
+    required Color color, // Color associated with the todo
+    required bool isPinned, // Indicates if the todo is pinned
+    required String category, // Category of the todo
+    List<Map<String, dynamic>>? items, // Optional list of checklist items
+    String? imageUrl, // Optional image URL
+    required String docId, // Document ID for Firestore
+  }) async {
+    Response response = Response();
+    DocumentReference documentReferencer = _collection.doc(docId);
 
-  // Update an existing Todo (for real-time collaboration)
-  Future<void> updateTodo(TodoModel todo, String userId) async {
-    final todoRef = _db.child('todos/${todo.id}');
+    Map<String, dynamic> data = <String, dynamic>{
+      "id": id,
+      "title": title,
+      "description": description,
+      "type": type,
+      "color": color.value, // Store color as an integer
+      "pinned": isPinned,
+      "category": category,
+      "items": items, // Optional list of checklist items
+      "imageUrl": imageUrl,
+    };
 
-    // Set fields to be updated in the todo
-    await todoRef.update({
-      ...todo.toMap(),
-      'lastEdited': ServerValue.timestamp,
-      'editingUser': userId,
+    await documentReferencer.update(data).whenComplete(() {
+      response.code = 200;
+      response.message = "Successfully updated Todo";
+    }).catchError((e) {
+      response.code = 500;
+      response.message = e.toString(); // Ensure error is a string
     });
+
+    return response;
   }
 
-  // Track when a user starts editing a todo
-  Future<void> startEditing(String todoId, String userId) async {
-    final todoRef = _db.child('todos/$todoId');
+  Future<Response> deleteTodo({
+    required String docId, // Document ID of the todo to be deleted
+  }) async {
+    Response response = Response();
+    DocumentReference documentReferencer =
+        _collection.doc(docId); // Use the correct collection reference
 
-    await todoRef.update({
-      'editingUser': userId,
-      'lastEdited': ServerValue.timestamp,
+    await documentReferencer.delete().whenComplete(() {
+      response.code = 200;
+      response.message = "Successfully deleted Todo"; // Corrected spelling
+    }).catchError((e) {
+      response.code = 500;
+      response.message = e.toString(); // Ensure error is a string
     });
-  }
 
-  // Track when a user stops editing a todo
-  Future<void> stopEditing(String todoId) async {
-    final todoRef = _db.child('todos/$todoId');
-
-    await todoRef.update({
-      'editingUser': null,
-    });
-  }
-
-  // Delete a Todo
-  Future<void> deleteTodo(String todoId) async {
-    final todoRef = _db.child('todos/$todoId');
-    await todoRef.remove();
+    return response;
   }
 }
