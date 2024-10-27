@@ -3,9 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:todochatapp/features/todo/data/firebase_db.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:todochatapp/features/todo/data/model/todo_model.dart';
 
 class AddTodoPage extends StatefulWidget {
-  const AddTodoPage({super.key});
+  final TodoModel? todo;
+
+  const AddTodoPage({super.key, this.todo});
 
   @override
   _AddTodoPageState createState() => _AddTodoPageState();
@@ -29,20 +32,29 @@ class _AddTodoPageState extends State<AddTodoPage> {
 
   final DatabaseReference _dbRef =
       FirebaseDatabase.instance.ref('todos'); // Reference to the todos node
-  late Stream<DatabaseEvent> _todosStream;
 
   @override
   void initState() {
     super.initState();
-    _todosStream =
-        _dbRef.onValue; // Set up the stream to listen for value changes
+    if (widget.todo != null) {
+      _titleController.text = widget.todo!.title ?? '';
+      _descriptionController.text = widget.todo!.description ?? '';
+      _imageUrlController.text = widget.todo!.imageUrl ?? '';
+      _categoryController.text = widget.todo!.category ?? '';
+      _typeController.text = widget.todo!.type ?? '';
+      selectedColor = widget.todo!.color ?? Colors.white;
+      isPinned = widget.todo!.isPinned ?? false;
+      checklistItems = widget.todo!.items ?? [];
+      todoType = widget.todo!.type ?? 'note';
+      category = widget.todo!.category ?? 'General';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add Todo'),
+        title: Text(widget.todo == null ? 'Add Todo' : 'Edit Todo'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -62,11 +74,22 @@ class _AddTodoPageState extends State<AddTodoPage> {
                       return null;
                     },
                   ),
-                  if (todoType == 'note') // Show description only for notes
+                  if (todoType == 'note') ...[
                     TextFormField(
                       controller: _descriptionController,
                       decoration: InputDecoration(labelText: 'Description'),
                     ),
+                    _buildCategoryDropdown(),
+                  ] else if (todoType == 'image') ...[
+                    TextFormField(
+                      controller: _imageUrlController,
+                      decoration: InputDecoration(labelText: 'Image URL'),
+                    ),
+                    _buildCategoryDropdown(),
+                  ] else if (todoType == 'items') ...[
+                    // Add checklist items input here
+                    _buildCategoryDropdown(),
+                  ],
                   // Color picker for the todo
                   Row(
                     children: [
@@ -94,48 +117,10 @@ class _AddTodoPageState extends State<AddTodoPage> {
                   // Button to save the todo
                   ElevatedButton(
                     onPressed: _saveTodo,
-                    child: Text('Save Todo'),
+                    child:
+                        Text(widget.todo == null ? 'Save Todo' : 'Update Todo'),
                   ),
                 ],
-              ),
-            ),
-            // StreamBuilder to listen for real-time updates
-            Expanded(
-              child: StreamBuilder<DatabaseEvent>(
-                stream: _todosStream,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  }
-
-                  // Get the list of todos from the snapshot
-                  final todosData =
-                      (snapshot.data?.snapshot.value ?? {}) as Map;
-                  final todosList = todosData.entries.map((entry) {
-                    final todo = entry.value;
-                    return ListTile(
-                      title: Text(todo['title'] ?? ''),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(todo['description'] ?? ''),
-                          if (todo['lastEditedBy'] !=
-                              null) // Show last edited user
-                            Text('Last edited by: ${todo['lastEditedBy']}'),
-                          if (todo['lastEditedAt'] !=
-                              null) // Show last edited timestamp
-                            Text('Last edited at: ${todo['lastEditedAt']}'),
-                        ],
-                      ),
-                      tileColor: Color(todo['color'] ?? 0xFFFFFFFF),
-                    );
-                  }).toList();
-
-                  return ListView(children: todosList); // Display the todos
-                },
               ),
             ),
           ],
@@ -144,18 +129,44 @@ class _AddTodoPageState extends State<AddTodoPage> {
     );
   }
 
+  Widget _buildCategoryDropdown() {
+    return DropdownButtonFormField<String>(
+      value: category,
+      decoration: InputDecoration(labelText: 'Category'),
+      items: ['General', 'Work', 'Personal', 'Shopping']
+          .map((category) => DropdownMenuItem(
+                value: category,
+                child: Text(category),
+              ))
+          .toList(),
+      onChanged: (value) {
+        setState(() {
+          category = value ?? 'General';
+        });
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Category cannot be empty';
+        }
+        return null;
+      },
+    );
+  }
+
   Future<void> _pickColor() async {
+    Color tempColor =
+        selectedColor; // Use the current selected color as the initial color
+
     Color? color = await showDialog<Color>(
       context: context,
       builder: (context) {
-        Color tempColor = Colors.white; // Default color
         return AlertDialog(
           title: Text('Select a color'),
           content: SingleChildScrollView(
             child: BlockPicker(
               pickerColor: tempColor,
-              onColorChanged: (color) {
-                tempColor = color;
+              onColorChanged: (newColor) {
+                tempColor = newColor;
               },
             ),
           ),
@@ -211,25 +222,28 @@ class _AddTodoPageState extends State<AddTodoPage> {
       var todoData = {
         'id': user.uid,
         'title': _titleController.text,
-        'description': _descriptionController.text,
+        'description': todoType == 'note' ? _descriptionController.text : '',
         'type': _typeController.text.isEmpty ? todoType : _typeController.text,
         'color': selectedColor.value, // Save color as an int
         'isPinned': isPinned,
-        'category': _categoryController.text.isEmpty
-            ? category
-            : _categoryController.text,
-        'items': checklistItems.map((item) => {'item': item}).toList(),
-        'imageUrl': _imageUrlController.text,
+        'category': category,
+        'items': todoType == 'items'
+            ? checklistItems.map((item) => {'item': item}).toList()
+            : [],
+        'imageUrl': todoType == 'image' ? _imageUrlController.text : '',
         'lastEditedBy': user.email, // Save the email of the last editor
         'lastEditedAt':
             DateTime.now().toIso8601String(), // Save the current timestamp
       };
 
       // Save the todo to the database
-      await _dbRef.child(user.uid).set(todoData);
-
-      // Show result message
-      _showErrorDialog('Todo saved successfully!');
+      if (widget.todo == null) {
+        await _dbRef.child(user.uid).push().set(todoData);
+        _showErrorDialog('Todo saved successfully!');
+      } else {
+        await _dbRef.child(user.uid).child(widget.todo!.id).update(todoData);
+        _showErrorDialog('Todo updated successfully!');
+      }
     }
   }
 }

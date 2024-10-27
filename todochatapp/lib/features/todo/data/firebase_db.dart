@@ -76,6 +76,7 @@ class FirebaseDB {
           ));
         });
       }
+      print("Fetched todos: $todos"); // Debugging print statement
       return todos;
     });
   }

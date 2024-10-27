@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:todochatapp/features/todo/data/firebase_db.dart';
 import 'package:todochatapp/features/todo/data/model/todo_model.dart';
@@ -13,6 +14,17 @@ class TodosPage extends StatefulWidget {
 class _TodoListScreenState extends State<TodosPage> {
   bool isGridView = false; // Toggle to switch views
   FirebaseDB firebaseDB = FirebaseDB();
+  late DatabaseReference _dbRef;
+  late Stream<DatabaseEvent> todosStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _dbRef =
+        FirebaseDatabase.instance.ref('todos'); // Reference to the todos node
+    todosStream =
+        _dbRef.onValue; // Set up the stream to listen for value changes
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,79 +49,48 @@ class _TodoListScreenState extends State<TodosPage> {
           ),
         ],
       ),
-      body: StreamBuilder<List<TodoModel>>(
-        stream: firebaseDB.readTodo(),
+      body: StreamBuilder<DatabaseEvent>(
+        stream: todosStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text("No todos available."));
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final todos = snapshot.data!;
-
-          return isGridView
-              ? GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 8,
-                    crossAxisSpacing: 8,
-                    childAspectRatio: 3 / 2,
+          // Get the list of todos from the snapshot
+          final todosData = (snapshot.data?.snapshot.value ?? {}) as Map;
+          final todosList = todosData.entries.map((entry) {
+            final todo = entry.value;
+            return ListTile(
+              title: Text(todo['title'] ?? ''),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(todo['description'] ?? ''),
+                  if (todo['lastEditedBy'] != null) // Show last edited user
+                    Text('Last edited by: ${todo['lastEditedBy']}'),
+                  if (todo['lastEditedAt'] !=
+                      null) // Show last edited timestamp
+                    Text('Last edited at: ${todo['lastEditedAt']}'),
+                ],
+              ),
+              tileColor: Color(todo['color'] ?? 0xFFFFFFFF),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        AddTodoPage(todo: TodoModel.fromMap(todo)),
                   ),
-                  itemCount: todos.length,
-                  itemBuilder: (context, index) {
-                    return TodoItemCard(todo: todos[index]);
-                  },
-                )
-              : ListView.builder(
-                  itemCount: todos.length,
-                  itemBuilder: (context, index) {
-                    return TodoItemCard(todo: todos[index]);
-                  },
                 );
+              },
+            );
+          }).toList();
+
+          return ListView(children: todosList); // Display the todos
         },
-      ),
-    );
-  }
-}
-
-class TodoItemCard extends StatelessWidget {
-  final TodoModel todo;
-
-  const TodoItemCard({super.key, required this.todo});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Color(todo.color.value), // Fallback to white if color is null
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              todo.title ?? "No Title", // Fallback if title is null
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 4),
-            Text(todo.description ?? "No Description"),
-            if (todo.type != null) // Show type if not null
-              Text("Type: ${todo.type}"),
-            if (todo.category != null) // Show category if not null
-              Text("Category: ${todo.category}"),
-            if (todo.lastEdited != null) // Show last edited user if not null
-              Text("Last edited by: ${todo.lastEdited}"),
-            if (todo.lastEdited !=
-                null) // Show last edited timestamp if not null
-              Text("Last edited at: ${todo.lastEdited}"),
-            SizedBox(height: 4),
-            if (todo.imageUrl != null) // Show image if URL is not null
-              Image.network(todo.imageUrl!, height: 50, fit: BoxFit.cover),
-            if (todo.isPinned) // Show pin icon if pinned
-              Icon(Icons.push_pin, color: Colors.red),
-          ],
-        ),
       ),
     );
   }
