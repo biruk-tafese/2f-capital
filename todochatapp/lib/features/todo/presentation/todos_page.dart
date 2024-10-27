@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todochatapp/features/todo/data/firebase_db.dart';
-import 'package:todochatapp/features/todo/model/todo_model.dart';
+import 'package:todochatapp/features/todo/data/model/todo_model.dart';
 import 'package:todochatapp/features/todo/presentation/add_todo_page.dart';
 
 class TodosPage extends StatefulWidget {
