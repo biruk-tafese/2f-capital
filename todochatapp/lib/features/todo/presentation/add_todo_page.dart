@@ -127,7 +127,7 @@ class _AddTodoPageState extends State<AddTodoPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Error'),
+          title: Text('Response'),
           content: Text(message),
           actions: [
             TextButton(

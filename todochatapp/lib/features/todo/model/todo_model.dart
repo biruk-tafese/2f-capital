@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 
 class TodoModel {
-  String id; // Unique identifier for the todo item
-  String title; // Title of the todo
-  String? description; // Optional description of the todo
-  String type; // Type of todo (e.g., note, checklist, image)
-  Color color; // Color associated with the todo
-  bool isPinned; // Indicates if the todo is pinned
-  String category; // Category of the todo
-  List<Map<String, dynamic>>? items; // Optional list of checklist items
-  String? imageUrl; // Optional image URL
+  String id;
+  String title;
+  String? description;
+  String type;
+  Color color;
+  bool isPinned;
+  String category;
+  List<Map<String, dynamic>>? items;
+  String? imageUrl;
+  String createdBy;
+  List<String>? assignedUsers;
+  int? lastEdited;
+  String? editingUser;
 
   // Constructor
   TodoModel({
@@ -22,26 +26,37 @@ class TodoModel {
     required this.category,
     this.items,
     this.imageUrl,
+    required this.createdBy,
+    this.assignedUsers,
+    this.lastEdited,
+    this.editingUser,
   });
 
-  // Factory method to create a Todo instance from a Map
+  // Factory method to create a TodoModel instance from a Map
   factory TodoModel.fromMap(Map<String, dynamic> data) {
     return TodoModel(
       id: data['id'],
       title: data['title'],
       description: data['description'],
       type: data['type'],
-      color: data['color'] ?? Colors.white, // Default color if not provided
+      color:
+          Color(data['color'] ?? 0xFFFFFFFF), // Default color if not provided
       isPinned: data['pinned'] ?? false,
       category: data['category'],
       items: data['items'] != null
           ? List<Map<String, dynamic>>.from(data['items'])
           : null,
       imageUrl: data['imageUrl'],
+      createdBy: data['createdBy'],
+      assignedUsers: data['assignedUsers'] != null
+          ? List<String>.from(data['assignedUsers'])
+          : null,
+      lastEdited: data['lastEdited'],
+      editingUser: data['editingUser'],
     );
   }
 
-  // Method to convert a Todo instance to a Map
+  // Method to convert a TodoModel instance to a Map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -53,6 +68,10 @@ class TodoModel {
       'category': category,
       'items': items,
       'imageUrl': imageUrl,
+      'createdBy': createdBy,
+      'assignedUsers': assignedUsers,
+      'lastEdited': lastEdited,
+      'editingUser': editingUser,
     };
   }
 }
