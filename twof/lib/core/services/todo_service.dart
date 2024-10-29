@@ -1,28 +1,54 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:twof/data/model/todo_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TodoService {
   final DatabaseReference _dbRef =
       FirebaseDatabase.instance.ref().child('todos');
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Add a new todo
   Future<void> addTodo(Todo todo) async {
-    final newTodoRef = _dbRef.push();
-    await newTodoRef.set(todo.toMap());
+    User? user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('todos').add({
+        'title': todo.title,
+        'description': todo.description,
+        'userId': todo.userId, // Store the user's ID
+        'email': todo.email, // Store the user's email
+        'isPinned': todo.isPinned,
+        'date': todo.date,
+        'isCompleted': todo.isCompleted,
+        'createdBy': todo.createdBy,
+        'collaborators': todo.collaborators,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
   }
 
-  // Fetch all todos with real-time updates
-  Stream<List<Todo>> getTodos() {
-    return _dbRef.onValue.map((event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>?;
-      if (data != null) {
-        return data.entries
-            .map((e) => Todo.fromMap(e.key, Map<String, dynamic>.from(e.value)))
-            .toList();
-      } else {
-        return [];
-      }
+  Future<void> updateTodo(Todo todo) async {
+    await _firestore.collection('todos').doc(todo.id).update({
+      'title': todo.title,
+      'description': todo.description,
+      'isPinned': todo.isPinned,
+      'date': todo.date,
     });
+  }
+
+  // Fetch todos for the logged-in user
+  Stream<List<Todo>> getTodos() {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      return _firestore
+          .collection('todos')
+          .where('userId', isEqualTo: user.uid)
+          .snapshots()
+          .map((snapshot) =>
+              snapshot.docs.map((doc) => Todo.fromFirestore(doc)).toList());
+    }
+    return Stream.value([]);
   }
 
   // Update a todo

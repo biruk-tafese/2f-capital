@@ -1,6 +1,7 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:twof/presentation/screens/home/home_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:twof/core/theme/app_theme.dart';
+import 'package:twof/presentation/screens/splash/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,8 +14,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: HomeScreen(),
+    return MaterialApp(
+      theme: AppTheme.theme,
+      home: const SplashScreen(),
     );
   }
 }
