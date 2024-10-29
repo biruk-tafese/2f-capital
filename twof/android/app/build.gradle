@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    // FlutterFire Configuration
+    id 'com.google.gms.google-services' // For Firebase
+    id 'dev.flutter.flutter-gradle-plugin' // Flutter plugin
+}
+
+android {
+    namespace "com.example.twof"
+
+    // Compile SDK version to use APIs from Android 13 (API level 33) or the latest available
+    compileSdkVersion 34  // Or the latest available (you mentioned 35)
+
+    // Optional: NDK version (if applicable)
+    ndkVersion flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    defaultConfig {
+        // Unique application ID
+        applicationId "com.example.todochatapp"
+        
+        // Minimum supported Android version
+        minSdkVersion 23  // Set to 23 to match Firebase's requirements
+
+        // Target Android version
+        targetSdkVersion 33  // Target the latest stable version
+
+        // Version code and name for your app
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            // Configure release build
+            signingConfig signingConfigs.debug
+            // For production, configure a proper signing config for release builds
+            // signingConfig signingConfigs.release
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+
+// Apply the Google services plugin for Firebase configuration
+apply plugin: 'com.google.gms.google-services'

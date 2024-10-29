@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "829710817758",
+    "firebase_url": "https://f-chat-todo-app-default-rtdb.firebaseio.com",
+    "project_id": "f-chat-todo-app",
+    "storage_bucket": "f-chat-todo-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:829710817758:android:e1dfd9b36f163c123ea54f",
+        "android_client_info": {
+          "package_name": "com.example.todochatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "829710817758-0bttb2u679pd010sl08h5n32dir80du9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.todochatapp",
+            "certificate_hash": "cb4a82f3a0094c5da4b8f3f075b314655b8fe75b"
+          }
+        },
+        {
+          "client_id": "829710817758-acoljkg9e14pbc7955snb169vfsctufn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD9aAB3PlW0WhkHuNkkrdPZZgc6FgW1NYM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "829710817758-acoljkg9e14pbc7955snb169vfsctufn.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "829710817758-0lubg44rkfp5v3t1dofa8qdo7m7ie12j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.todochatapp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
