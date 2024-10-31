@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twof/core/services/chat_service.dart';
-import 'package:twof/presentation/screens/chat/chat_screen.dart';
+import 'package:twof/presentation/screens/chat/chat_list_screen.dart';
 import 'package:twof/presentation/screens/todos/todo_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -26,13 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    chatId = chatService.generateOneOnOneChatId("userId1", "userId;2");
-    _screens = [
-      const TodoScreen(),
-      ChatScreen(
-        chatId: chatId,
-      )
-    ];
+    _screens = [const TodoScreen(), const ChatListScreen()];
   }
 
   @override

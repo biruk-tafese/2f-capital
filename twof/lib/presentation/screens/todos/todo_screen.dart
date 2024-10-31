@@ -1,9 +1,10 @@
-// lib/presentation/screens/todos/todo_screen.dart
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:twof/core/services/auth_services.dart';
 import 'package:twof/core/services/todo_service.dart';
 import 'package:twof/data/model/todo_model.dart';
+import 'package:twof/presentation/screens/auth/login_screen.dart';
+import 'package:twof/presentation/screens/todos/add_todo_screen.dart';
+import 'package:twof/presentation/screens/todos/todo_detail_screen.dart';
 
 class TodoScreen extends StatefulWidget {
   const TodoScreen({super.key});
@@ -13,178 +14,190 @@ class TodoScreen extends StatefulWidget {
 }
 
 class _TodoScreenState extends State<TodoScreen> {
-  final TodoService _todoService = TodoService();
-  final AuthService _authService = AuthService();
+  bool isGridView = true;
+  final TextEditingController _searchController = TextEditingController();
+  List<Todo> todos = [];
+  List<Todo> filteredTodos = [];
 
-  void _showAddTodoDialog(BuildContext context, bool isEdit, Todo? todo) {
-    final titleController = TextEditingController();
-    final descriptionController = TextEditingController();
-    final dateController = TextEditingController();
-    bool isPinned = false; // Default pin status
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_filterTodos);
+  }
 
-    if (isEdit && todo != null) {
-      titleController.text = todo.title;
-      descriptionController.text = todo.description;
-      dateController.text = todo.date;
-      isPinned = todo.isPinned; // Assuming `isPinned` is a property of Todo
-    }
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(isEdit ? 'Edit Todo' : 'Add Todo'),
-          content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.5,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: titleController,
-                  decoration: const InputDecoration(
-                    hintText: 'Task',
-                    icon: Icon(Icons.title),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: descriptionController,
-                  keyboardType: TextInputType.multiline,
-                  maxLines: null,
-                  decoration: const InputDecoration(
-                    hintText: 'Description',
-                    icon: Icon(Icons.description),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: dateController,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    hintText: 'Date',
-                    icon: Icon(Icons.calendar_today),
-                    border: OutlineInputBorder(),
-                  ),
-                  onTap: () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2101),
-                    );
-
-                    if (pickedDate != null) {
-                      String formattedDate =
-                          DateFormat('yyyy-MM-dd').format(pickedDate);
-                      setState(() {
-                        dateController.text = formattedDate;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Pin Todo'),
-                    Switch(
-                      value: isPinned,
-                      onChanged: (value) {
-                        setState(() {
-                          isPinned = value;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                // Add a dropdown for categories if needed
-                const SizedBox(height: 15),
-              ],
-            ),
-          ),
-          actions: [
-            ElevatedButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-            ElevatedButton(
-              child: Text(isEdit ? 'Update' : 'Add'),
-              onPressed: () {
-                final newTodo = Todo(
-                  id: isEdit ? todo!.id : DateTime.now().toString(),
-                  title: titleController.text,
-                  description: descriptionController.text,
-                  date: dateController.text,
-                  isPinned: isPinned,
-                  completed: false,
-                  createdBy: '',
-                  collaborators: {},
-                  userId: _authService.getCurrentUser()!.uid,
-                  email: _authService.getCurrentUser()!.email,
-                );
-
-                if (isEdit) {
-                  _todoService.updateTodo(
-                      newTodo); // Implement update method in your TodoService
-                } else {
-                  _todoService.addTodo(
-                      newTodo); // Implement add method in your TodoService
-                }
-
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
-    );
+  void _filterTodos() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      filteredTodos = todos.where((todo) {
+        return todo.title.toLowerCase().contains(query);
+      }).toList();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final TodoService todoService = TodoService();
+    final AuthService authService = AuthService();
+
     return Scaffold(
+      backgroundColor: Colors.grey[200],
       appBar: AppBar(
-        title: const Text('Your Todos'),
+        title: TextField(
+          controller: _searchController,
+          decoration: const InputDecoration(
+            hintText: 'Search your notes',
+            border: InputBorder.none,
+            hintStyle: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+          ),
+          style: const TextStyle(color: Colors.white),
+        ),
+        actions: [
+          IconButton(
+              onPressed: () async {
+                await authService.signOut();
+                Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
+                    (route) => false);
+              },
+              icon: const Icon(Icons.logout_rounded)),
+        ],
       ),
       body: StreamBuilder<List<Todo>>(
-        stream: _todoService.getTodos(),
+        stream: todoService.getTodos(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No Todos available.'));
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error loading todos'));
           }
 
-          final todos = snapshot.data!;
+          todos = snapshot.data ?? [];
+          // If search is active, display filtered results; otherwise, display all todos
+          final displayedTodos =
+              _searchController.text.isNotEmpty ? filteredTodos : todos;
+          final pinnedTodos =
+              displayedTodos.where((todo) => todo.isPinned).toList();
+          final regularTodos =
+              displayedTodos.where((todo) => !todo.isPinned).toList();
 
-          return ListView.builder(
-            itemCount: todos.length,
-            itemBuilder: (context, index) {
-              final todo = todos[index];
-              return ListTile(
-                title: Text(todo.title),
-                subtitle: Text(todo.description),
-                trailing: IconButton(
-                  icon: const Icon(Icons.edit),
-                  onPressed: () {
-                    _showAddTodoDialog(context, true, todo);
-                  },
-                ),
-              );
-            },
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                if (pinnedTodos.isNotEmpty) ...[
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('PINNED',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  _buildTodoGrid(pinnedTodos),
+                ],
+                _buildTodoGrid(regularTodos),
+              ],
+            ),
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showAddTodoDialog(context, false, null);
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const AddTodoScreen()));
         },
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildTodoGrid(List<Todo> todos) {
+    final pinnedTodos = todos.where((todo) => todo.isPinned).toList();
+    final unpinnedTodos = todos.where((todo) => !todo.isPinned).toList();
+
+    if (isGridView) {
+      return Column(
+        children: [
+          if (pinnedTodos.isNotEmpty)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: pinnedTodos
+                    .map((todo) => Container(
+                          width: 150,
+                          margin: const EdgeInsets.all(8),
+                          child: _buildTodoCard(todo),
+                        ))
+                    .toList(),
+              ),
+            ),
+          if (pinnedTodos.isNotEmpty) const SizedBox(height: 8),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const ClampingScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 0.8,
+            ),
+            itemCount: unpinnedTodos.length,
+            itemBuilder: (context, index) {
+              return _buildTodoCard(unpinnedTodos[index]);
+            },
+          ),
+        ],
+      );
+    } else {
+      return ListView.builder(
+        shrinkWrap: true,
+        physics: const ClampingScrollPhysics(),
+        itemCount: todos.length,
+        itemBuilder: (context, index) {
+          final todo = todos[index];
+          return _buildTodoCard(todo);
+        },
+      );
+    }
+  }
+
+  Widget _buildTodoCard(Todo todo) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TodoDetailScreen(todo: todo),
+          ),
+        );
+      },
+      child: Card(
+        color: todo.isPinned ? Colors.yellow[100] : Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                todo.title ?? 'Untitled',
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                todo.description ?? 'No description',
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

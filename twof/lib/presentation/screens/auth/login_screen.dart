@@ -1,5 +1,5 @@
-// lib/presentation/screens/login/login_screen.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import shared preferences
 import 'package:twof/core/services/auth_services.dart';
 import 'package:twof/core/theme/app_theme.dart';
 import 'package:twof/presentation/screens/auth/signup_screen.dart';
@@ -19,11 +19,44 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>(); // Key for form validation
 
+  bool _rememberMe = false; // Track the state of the "Remember Me" checkbox
+
+  @override
+  void initState() {
+    super.initState();
+    checkLoginStatus(); // Check if the user is already logged in
+  }
+
+  Future<void> checkLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? isLoggedIn = prefs.getBool('isLoggedIn');
+
+    if (isLoggedIn == true) {
+      // User is logged in, navigate to home screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
+  }
+
   void _login() async {
     if (_formKey.currentState?.validate() ?? false) {
       final user = await _authService.signIn(
           _emailController.text, _passwordController.text);
       if (user != null) {
+        // Save the "Remember Me" preference
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        if (_rememberMe) {
+          // Save the email and login status if "Remember Me" is checked
+          prefs.setString('email', _emailController.text);
+          prefs.setBool('isLoggedIn', true);
+        } else {
+          // Clear saved email and login status
+          prefs.remove('email');
+          prefs.setBool('isLoggedIn', false);
+        }
+
         // Navigate to home screen
         Navigator.pushAndRemoveUntil(
             context,
@@ -87,7 +120,25 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(onPressed: _login, child: const Text('Login')),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _rememberMe,
+                      onChanged: (value) {
+                        setState(() {
+                          _rememberMe = value ?? false;
+                        });
+                      },
+                    ),
+                    const Text('Remember Me'),
+                  ],
+                ),
+                ElevatedButton(
+                    onPressed: _login,
+                    child: const Text('Login',
+                        style: TextStyle(
+                          color: Colors.white,
+                        ))),
                 TextButton(
                   onPressed: _forgotPassword,
                   child: const Text(

@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:twof/core/services/auth_services.dart';
 import 'package:twof/presentation/screens/auth/login_screen.dart';
-import 'package:twof/presentation/screens/home/home_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -96,7 +95,9 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                    onPressed: _signup, child: const Text('Sign Up')),
+                    onPressed: _signup,
+                    child: const Text('Sign Up',
+                        style: TextStyle(color: Colors.white))),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
