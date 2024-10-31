@@ -149,7 +149,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   color: isSender ? Colors.white : Colors.black,
                                 ),
                               ),
-                            SizedBox(height: 5),
+                            const SizedBox(height: 5),
                             Text(
                               message['timestamp'] != null
                                   ? message['timestamp'].toDate().toString()
