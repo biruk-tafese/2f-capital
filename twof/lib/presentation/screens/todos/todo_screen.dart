@@ -184,16 +184,42 @@ class _TodoScreenState extends State<TodoScreen> {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween, // Add this line
             children: [
-              Text(
-                todo.title ?? 'Untitled',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Column(
+                // Wrap title and description in another Column
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    todo.title ?? 'Untitled',
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    todo.description ?? 'No description',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    maxLines: 4, // Limit the description to 2 lines
+                    overflow: TextOverflow
+                        .ellipsis, // Show ellipsis (...) for overflow text
+                  ),
+                  const SizedBox(height: 6),
+                ],
               ),
-              const SizedBox(height: 4),
-              Text(
-                todo.description ?? 'No description',
-                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(
+                    "Category: ${todo.category}" ?? "Other",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 42, 0, 251), fontSize: 10),
+                  ),
+                  Text(
+                    "type: ${todo.type}" ?? "Optional",
+                    style: const TextStyle(
+                        color: Color.fromARGB(255, 42, 0, 251), fontSize: 10),
+                  ),
+                ],
               ),
             ],
           ),

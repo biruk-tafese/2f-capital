@@ -26,7 +26,8 @@ class TodoService {
         'isPinned': todo.isPinned,
         'date': todo.date,
         'isCompleted': todo.isCompleted,
-        'createdBy': todo.createdBy,
+        'category': todo.category,
+        'type': todo.type,
         'collaborators': todo.collaborators, // Store collaborators
         'timestamp': ServerValue.timestamp, // Use server timestamp
       });
@@ -40,7 +41,8 @@ class TodoService {
         'isPinned': todo.isPinned,
         'date': todo.date,
         'isCompleted': todo.isCompleted,
-        'createdBy': todo.createdBy,
+        'category': todo.category,
+        'type': todo.type,
         'collaborators': todo.collaborators, // Store collaborators in Firestore
         'timestamp': FieldValue.serverTimestamp(),
       });
@@ -54,6 +56,8 @@ class TodoService {
       'description': todo.description,
       'isPinned': todo.isPinned,
       'date': todo.date,
+      'category': todo.category,
+      'type': todo.type,
       'isCompleted': todo.isCompleted, // Update completion status
       'collaborators': todo.collaborators, // Update collaborators
     });
@@ -63,6 +67,8 @@ class TodoService {
       'description': todo.description,
       'isPinned': todo.isPinned,
       'date': todo.date,
+      'category': todo.category,
+      'type': todo.type,
       'isCompleted': todo.isCompleted, // Update completion status
       'collaborators': todo.collaborators, // Update collaborators in Firestore
     });
@@ -84,8 +90,9 @@ class TodoService {
             isPinned: todoData['isPinned'],
             date: todoData['date'],
             isCompleted: todoData['isCompleted'],
-            createdBy: todoData['createdBy'],
             collaborators: todoData['collaborators'],
+            category: todoData['category'],
+            type: todoData['type'],
             completed: false,
           );
         }).toList();

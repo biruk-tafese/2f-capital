@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:twof/core/services/chat_service.dart';
 import 'package:twof/presentation/screens/chat/chat_list_screen.dart';
 import 'package:twof/presentation/screens/todos/todo_screen.dart';
@@ -13,20 +14,48 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   final ChatService chatService = ChatService();
-
-  late String chatId;
   late List<Widget> _screens;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
 
   @override
   void initState() {
     super.initState();
     _screens = [const TodoScreen(), const ChatListScreen()];
+
+    // Check network connectivity
+    _checkNetwork();
+  }
+
+  Future<void> _checkNetwork() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      _showNetworkErrorDialog();
+    }
+  }
+
+  void _showNetworkErrorDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Network Unavailable'),
+          content: const Text('Please check your internet connection.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   @override

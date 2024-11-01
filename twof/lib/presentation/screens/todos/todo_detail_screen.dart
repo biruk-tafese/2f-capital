@@ -38,11 +38,20 @@ class TodoDetailScreen extends StatelessWidget {
                       const Text('Are you sure you want to delete this todo?'),
                   actions: [
                     TextButton(
-                      onPressed: () => todoService.deleteTodo(todo.id),
+                      onPressed: () {
+                        // Simply close the dialog without any action
+                        Navigator.of(context).pop();
+                      },
                       child: const Text('Cancel'),
                     ),
                     TextButton(
-                      onPressed: () => Navigator.of(context).pop(true),
+                      onPressed: () {
+                        // Call the delete method and pop the dialog
+                        todoService.deleteTodo(todo.id);
+                        // Optionally, you can navigate back or show a success message here
+                        Navigator.of(context)
+                            .pop(true); // or navigate back if needed
+                      },
                       child: const Text('Delete'),
                     ),
                   ],
@@ -60,24 +69,44 @@ class TodoDetailScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              todo.title ?? 'Untitled',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              todo.description ?? 'No description available',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Pinned: ${todo.isPinned ? 'Yes' : 'No'}',
-              style: const TextStyle(fontSize: 16),
-            ),
-          ],
+        child: Center(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                todo.title ?? 'Untitled',
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                todo.description ?? 'No description available',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "Category of Todo: ${todo.category}" ??
+                    'No description available',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              const SizedBox(height: 16),
+              Text(
+                "Type of Todo: ${todo.type}" ?? 'No description available',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Pinned: ${todo.isPinned ? 'Yes' : 'Not'}',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'created by: ${todo.email}',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
         ),
       ),
     );

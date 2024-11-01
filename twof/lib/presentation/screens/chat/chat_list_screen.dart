@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:twof/core/services/auth_services.dart';
+import 'package:twof/presentation/screens/auth/login_screen.dart';
 import 'package:twof/presentation/screens/chat/chat_show_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -12,6 +13,15 @@ class ChatListScreen extends StatefulWidget {
 class _ChatListScreenState extends State<ChatListScreen> {
   final AuthService _authService = AuthService();
 
+  Future<void> _logout() async {
+    await _authService.signOut();
+    // Navigate to the LoginScreen after logout
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (Route<dynamic> route) => false, // Remove all previous routes
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,9 +30,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_rounded),
-            onPressed: () {
-              _authService.signOut();
-            },
+            onPressed: _logout, // Update to use the _logout method
           ),
         ],
       ),

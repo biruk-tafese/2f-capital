@@ -93,45 +93,51 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(hintText: 'Email'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    // Add more email validation if needed
-                    return null;
-                  },
+                Center(
+                  child: TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(hintText: 'Email'),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      // Add more email validation if needed
+                      return null;
+                    },
+                  ),
                 ),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  decoration: const InputDecoration(hintText: 'Password'),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    if (value.length < 6) {
-                      return 'Password must be at least 6 characters long';
-                    }
-                    return null;
-                  },
+                Center(
+                  child: TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(hintText: 'Password'),
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters long';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Checkbox(
-                      value: _rememberMe,
-                      onChanged: (value) {
-                        setState(() {
-                          _rememberMe = value ?? false;
-                        });
-                      },
-                    ),
-                    const Text('Remember Me'),
-                  ],
+                Center(
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) {
+                          setState(() {
+                            _rememberMe = value ?? false;
+                          });
+                        },
+                      ),
+                      const Text('Remember Me'),
+                    ],
+                  ),
                 ),
                 ElevatedButton(
                     onPressed: _login,
@@ -146,22 +152,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(color: AppTheme.primaryColor),
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Don\'t have an account?'),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const SignupScreen()),
-                            (route) => false);
-                      },
-                      child: const Text('Sign Up',
-                          style: TextStyle(color: Colors.blue)),
-                    ),
-                  ],
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Don\'t have an account?'),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SignupScreen()),
+                              (route) => false);
+                        },
+                        child: const Text('Sign Up',
+                            style: TextStyle(color: Colors.blue)),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

@@ -19,9 +19,15 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _collaboratorsController =
       TextEditingController();
+
   DateTime? _selectedDate;
   bool _isPinned = false;
   bool _isLoading = false;
+  String? _selectedType = "Other";
+  String? _selectedCategory = "Optional";
+
+  final List<String> _types = ['Personal', 'Work', 'Study', 'Other'];
+  final List<String> _categories = ['Urgent', 'Routine', 'Optional'];
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -66,8 +72,9 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
         email: FirebaseAuth.instance.currentUser?.email ?? '',
         isPinned: _isPinned,
         date: _selectedDate!.toIso8601String(),
+        type: _selectedType,
+        category: _selectedCategory,
         isCompleted: false,
-        createdBy: FirebaseAuth.instance.currentUser?.displayName ?? '',
         collaborators: collaboratorsMap,
         completed: false, // Use Map<String, bool>
       );
@@ -83,6 +90,8 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
       _titleController.clear();
       _descriptionController.clear();
       _collaboratorsController.clear();
+      _selectedCategory = null;
+      _selectedType = null;
       _selectedDate = null;
       _isPinned = false;
 
@@ -140,6 +149,31 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                   ),
                 ],
               ),
+              DropdownButtonFormField<String>(
+                value: _selectedType,
+                hint: const Text("Select Type"),
+                items: _types.map((type) {
+                  return DropdownMenuItem(value: type, child: Text(type));
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedType = newValue!;
+                  });
+                },
+              ),
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                hint: const Text("Select Category"),
+                items: _categories.map((category) {
+                  return DropdownMenuItem(
+                      value: category, child: Text(category));
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedCategory = newValue!;
+                  });
+                },
+              ),
               CheckboxListTile(
                 title: const Text("Pin this task"),
                 value: _isPinned,
@@ -150,18 +184,20 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
                 },
                 controlAffinity: ListTileControlAffinity.leading,
               ),
-              TextFormField(
-                controller: _collaboratorsController,
-                decoration: const InputDecoration(
-                    labelText: 'Collaborators (comma-separated emails)'),
-              ),
               const SizedBox(height: 20),
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : ElevatedButton(
-                      onPressed: _submitTodo,
-                      child: const Text('Add Todo'),
-                    ),
+                  : Center(
+                      child: ElevatedButton(
+                        onPressed: _submitTodo,
+                        child: const Text(
+                          'Add Todo',
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    )
             ],
           ),
         ),

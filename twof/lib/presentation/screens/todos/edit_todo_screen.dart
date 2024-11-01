@@ -16,7 +16,14 @@ class EditTodoScreen extends StatefulWidget {
 class _EditTodoScreenState extends State<EditTodoScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+
   bool _isPinned = false;
+
+  final List<String> _types = ['Personal', 'Work', 'Study', 'Other'];
+  final List<String> _categories = ['Urgent', 'Routine', 'Optional'];
+  String? _selectedType = "Other";
+  String? _selectedCategory = "Optional";
+
   final TodoService _todoService = TodoService();
   final AuthService _authService = AuthService();
 
@@ -25,6 +32,11 @@ class _EditTodoScreenState extends State<EditTodoScreen> {
     super.initState();
     _titleController.text = widget.todo.title ?? '';
     _descriptionController.text = widget.todo.description ?? '';
+    // Ensure you assign from the valid list
+    _selectedType = widget.todo.type ?? _types.first; // Default to first item
+    _selectedCategory =
+        widget.todo.category ?? _categories.first; // Default to first item
+
     _isPinned = widget.todo.isPinned;
   }
 
@@ -32,6 +44,8 @@ class _EditTodoScreenState extends State<EditTodoScreen> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _selectedCategory = null;
+    _selectedType = null;
     super.dispose();
   }
 
@@ -44,7 +58,8 @@ class _EditTodoScreenState extends State<EditTodoScreen> {
       date: widget.todo.date,
       isCompleted: widget.todo.isCompleted,
       collaborators: widget.todo.collaborators,
-      createdBy: _authService.getCurrentUser()?.email ?? 'unknown',
+      category: widget.todo.category,
+      type: widget.todo.type,
       userId: _authService.getCurrentUser()?.uid ?? 'unknown',
       email: _authService.getCurrentUser()?.email ?? 'unknown',
       completed: false,
@@ -83,6 +98,30 @@ class _EditTodoScreenState extends State<EditTodoScreen> {
               controller: _descriptionController,
               decoration: const InputDecoration(labelText: 'Description'),
               maxLines: 4,
+            ),
+            DropdownButtonFormField<String>(
+              value: _selectedType,
+              hint: const Text("Select Type"),
+              items: _types.map((type) {
+                return DropdownMenuItem(value: type, child: Text(type));
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedType = newValue!;
+                });
+              },
+            ),
+            DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              hint: const Text("Select Category"),
+              items: _categories.map((category) {
+                return DropdownMenuItem(value: category, child: Text(category));
+              }).toList(),
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedCategory = newValue!;
+                });
+              },
             ),
             SwitchListTile(
               title: const Text('Pin this todo'),
